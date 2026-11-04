@@ -163,7 +163,7 @@ section.d.open:before{transform:translateX(-101%)}section.d.open:after{transform
 
 <script>
 (function(){
-var CFG={date:new Date('2026-11-20T19:00:00+02:00'),wa:'201147891417',speed:105};
+var CFG={date:new Date('2026-11-20T19:00:00+02:00'),wa:'201147891417',speed:105,music:'music.mp3'};
 var $=function(s){return document.querySelector(s)};
 /* reveal on scroll */
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.2});
@@ -203,10 +203,11 @@ var prog=[[220,277.2,329.6],[174.6,220,261.6],[196,246.9,293.7],[164.8,207.7,246
 function note(f,t,d,v){var o=ac.createOscillator(),gn=ac.createGain();o.type='sine';o.frequency.value=f;gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(v,t+.05);gn.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(gn);gn.connect(master);o.start(t);o.stop(t+d+.1)}
 function play(){var c=prog[Math.floor(step/6)%4],i=step%6,t=ac.currentTime+.05;
 var seq=[0,1,2,1,2,1];note(c[seq[i]]*2,t,2.4,.18);if(i===0){c.forEach(function(f){note(f/2,t,3.8,.12)})}step++}
-function startAudio(){if(on)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume();
+var au=null,bad=false;if(CFG.music){au=new Audio(CFG.music);au.loop=true;au.volume=.7;au.addEventListener('error',function(){bad=true;if(on){on=false;startAudio()}})}
+function startAudio(){if(on)return;if(au&&!bad){on=true;mbtn.style.opacity=1;var pr=au.play();if(pr&&pr.catch)pr.catch(function(e){on=false;mbtn.style.opacity=.45;if(!e||e.name!=='NotAllowedError'){bad=true;startAudio()}});return}try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume();
 if(!master){master=ac.createGain();master.gain.value=.5;var dl=ac.createDelay();dl.delayTime.value=.42;var fb=ac.createGain();fb.gain.value=.4;master.connect(ac.destination);master.connect(dl);dl.connect(fb);fb.connect(dl);fb.connect(ac.destination)}
 on=true;play();tm=setInterval(play,900);mbtn.style.opacity=1}catch(e){}}
-function stopAudio(){on=false;clearInterval(tm);mbtn.style.opacity=.45}
+function stopAudio(){on=false;if(au)au.pause();clearInterval(tm);mbtn.style.opacity=.45}
 mbtn.addEventListener('click',function(e){e.stopPropagation();on?stopAudio():startAudio()});
 ['pointerdown','touchstart','keydown','click'].forEach(function(ev){window.addEventListener(ev,function f(){if(!mbtn.dataset.off&&!on&&started){startAudio()}},{once:false,passive:true})});
 /* auto scroll */
